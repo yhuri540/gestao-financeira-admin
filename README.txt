@@ -1,16 +1,43 @@
-GESTÃO FINANCEIRA (ADMIN) — COMO RODAR
---------------------------------------
-1) Pré-requisito: Node.js LTS instalado (https://nodejs.org/)
-2) Windows: dê 2 cliques em start.bat
-   Linux/Mac: no terminal, rode:  chmod +x start.sh && ./start.sh
-3) Acesse no navegador:  http://localhost:3000
-4) Login (apenas admin):
-   - email: admin@admin.com
-   - senha: admin123
+# 💰 Sistema de Gestão Financeira (Admin Only)
 
-Pastas:
-- public/index.html  -> frontend
-- server.js          -> backend (Express)
-- src/db.js          -> SQLite e tabelas
+Aplicação web de **gestão financeira** com **Node.js + Express no backend e **HTML/CSS/JS** no frontend.  
+O acesso é restrito a um **único administrador**, com login fixo.
 
-Se algo nao abrir, visite: http://localhost:3000/api/health  (deve retornar {"ok":true})
+---
+
+## 🚀 Funcionalidades
+- **Login exclusivo de administrador**
+  - Email: `admin@admin.com`
+  - Senha: `admin123`
+- **Dashboard** moderno com:
+  - Saldo total das contas
+  - Contas a pagar (em aberto)
+  - Cartões de crédito
+  - Créditos (depósitos/entradas)
+  - Débitos (saques/saídas)
+- **Extrato** em tempo real com histórico de lançamentos
+- **Cadastros**:
+  - Pessoas
+  - Bancos
+  - Contas
+  - Centros de Custo
+  - Lançamentos
+- **API REST** protegida por **JWT** (testável no Postman)
+
+---
+
+## 🛠️ Tecnologias
+- [Node.js](https://nodejs.org/)  
+- [Express](https://expressjs.com/)  
+- [SQLite3](https://www.sqlite.org/)  
+- [JSON Web Token (JWT)](https://jwt.io/)  
+- Frontend em **HTML, CSS e JavaScript puro**
+
+---
+
+## 📥 Instalação
+
+Clone o repositório:
+```bash
+git clone https://github.com/yhuri540/gestao-financeira-admin.git
+cd gestao-financeira-admin
