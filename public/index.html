@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gestão Financeira (Admin)</title>
+<style>
+:root{
+  --bg:#0b1220;--panel:#0f172a;--accent:#3b82f6;--accent2:#1d4ed8;--muted:#94a3b8;--txt:#e2e8f0;
+  --panel-border: rgba(59,130,246,.25);
+}
+*{box-sizing:border-box}
+body{
+  margin:0;background:linear-gradient(135deg,#0d1117,#0b1220);
+  color:var(--txt);font-family:Segoe UI,Roboto,Arial,sans-serif;
+  padding:24px;min-height:100vh
+}
+h1,h2{margin:0 0 12px}
+h1{color:var(--accent)}
+.card{
+  background:rgba(15,23,42,.92);border:1px solid var(--panel-border);
+  border-radius:14px;box-shadow:0 10px 35px rgba(0,0,0,.5);padding:18px;
+}
+.hidden{display:none}
+label{display:block;margin-top:10px;font-size:14px}
+input,select{
+  width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid #1e293b;
+  background:rgba(0,0,0,.35);color:#fff
+}
+button{
+  margin-top:14px;padding:10px 14px;border:0;border-radius:10px;
+  background:linear-gradient(90deg,var(--accent),var(--accent2));color:#fff;font-weight:600;cursor:pointer
+}
+table{width:100%;border-collapse:collapse;margin-top:10px;font-size:14px}
+th,td{padding:8px 10px;border-bottom:1px solid rgba(59,130,246,.2);text-align:left}
+th{color:var(--accent)}
+.muted{color:var(--muted);font-size:13px}
+.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+
+/* ==== NOVO LAYOUT DO DASHBOARD ==== */
+.dashboard-grid{
+  display:grid;grid-template-columns: 2fr 1fr;gap:20px;align-items:start
+}
+@media (max-width: 980px){
+  .dashboard-grid{grid-template-columns: 1fr}
+}
+
+/* Extrato (esquerda) */
+.extrato{ /* container do extrato */
+  background:rgba(15,23,42,.92);
+  border:1px solid var(--panel-border);
+  border-radius:14px;padding:18px
+}
+.extrato table tr td:nth-child(3){text-transform:capitalize}
+.badge{
+  display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;
+  border:1px solid rgba(59,130,246,.35);color:#93c5fd
+}
+
+/* Visão Geral (direita) */
+.stats-grid{display:grid;grid-template-columns: repeat(auto-fill,minmax(180px,1fr));gap:12px}
+.stat{
+  background:rgba(59,130,246,.1);border:1px solid var(--panel-border);
+  padding:16px;border-radius:12px;text-align:center
+}
+.stat h3{margin:0;color:var(--accent)}
+
+/* Seções horizontais (linha inteira) */
+.section-full{
+  margin-top:20px;background:rgba(15,23,42,.92);border:1px solid var(--panel-border);
+  border-radius:14px;padding:18px
+}
+
+/* Form em linha nas seções (melhor UX) */
+.form-row{display:grid;grid-template-columns: repeat(auto-fill, minmax(220px,1fr));gap:10px}
+.form-row label{margin-top:0}
+
+/* Títulos das seções com linha */
+.section-title{
+  display:flex;align-items:center;gap:10px;margin-bottom:8px
+}
+.section-title:after{
+  content:"";flex:1 1 auto;height:1px;background:rgba(59,130,246,.25)
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN (único: admin) -->
+<section id="login" class="card" style="max-width:520px;margin:18px auto">
+  <h1>Login (Administrador)</h1>
+  <form id="formLogin">
+    <label>E-mail <input type="email" name="email" value="admin@admin.com" required></label>
+    <label>Senha <input type="password" name="senha" value="admin123" required></label>
+    <button type="submit" id="btnLogin">Entrar</button>
+  </form>
+  <p class="muted">Use apenas as credenciais de administrador.</p>
+  <p id="msgLogin" class="muted"></p>
+</section>
+
+<!-- DASHBOARD -->
+<section id="dashboard" class="hidden">
+  <div class="top">
+    <h1>Dashboard</h1>
+    <button onclick="logout()" style="background:#ef4444">Sair</button>
+  </div>
+
+  <!-- GRID: Extrato à esquerda + Visão Geral à direita -->
+  <div class="dashboard-grid">
+    <!-- Extrato -->
+    <div class="extrato">
+      <div class="section-title"><h2>Histórico / Extrato</h2></div>
+      <div id="extrato"></div>
+    </div>
+
+    <!-- Visão Geral -->
+    <div class="card">
+      <h2>Visão Geral</h2>
+      <div class="stats-grid">
+        <div class="stat"><h3 id="sSaldo">R$ 0,00</h3><p class="muted">Saldo de Contas</p></div>
+        <div class="stat"><h3 id="sContasPagar">R$ 0,00</h3><p class="muted">Contas a Pagar</p></div>
+        <div class="stat"><h3 id="sCartoes">R$ 0,00</h3><p class="muted">Cartões de Crédito</p></div>
+        <div class="stat"><h3 id="sDepositos">R$ 0,00</h3><p class="muted">Créditos</p></div>
+        <div class="stat"><h3 id="sSaques">R$ 0,00</h3><p class="muted">Débitos</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Seções horizontais (ocupam toda a largura) -->
+  <div class="section-full">
+    <div class="section-title"><h2>Pessoas</h2></div>
+    <form id="formPessoa" class="form-row">
+      <label>Razão Social <input name="razaoSocial" required></label>
+      <div style="align-self:end"><button>Adicionar</button></div>
+    </form>
+    <div id="pessoas" class="muted">Sem registros.</div>
+  </div>
+
+  <div class="section-full">
+    <div class="section-title"><h2>Bancos</h2></div>
+    <form id="formBanco" class="form-row">
+      <label>Razão Social <input name="razaoSocial" required></label>
+      <div style="align-self:end"><button>Adicionar</button></div>
+    </form>
+    <div id="bancos" class="muted">Sem registros.</div>
+  </div>
+
+  <div class="section-full">
+    <div class="section-title"><h2>Contas</h2></div>
+    <form id="formConta" class="form-row">
+      <label>Descrição <input name="descricao" required></label>
+      <label>Tipo
+        <select name="tipoConta">
+          <option>contaCorrente</option>
+          <option>contaInvestimento</option>
+          <option>contaCredito</option>
+          <option>alimentacao</option>
+          <option>poupanca</option>
+        </select>
+      </label>
+      <label>Agência <input name="agencia"></label>
+      <label>Número <input name="numero"></label>
+      <label>Limite <input type="number" step="0.01" name="limite"></label>
+      <label>Saldo <input type="number" step="0.01" name="saldo"></label>
+      <label>Banco (ID) <input type="number" name="bancoId"></label>
+      <div style="align-self:end"><button>Adicionar</button></div>
+    </form>
+    <div id="contas" class="muted">Sem registros.</div>
+  </div>
+
+  <div class="section-full">
+    <div class="section-title"><h2>Centros de Custo</h2></div>
+    <form id="formCentro" class="form-row">
+      <label>Descrição <input name="descricao" required></label>
+      <div style="align-self:end"><button>Adicionar</button></div>
+    </form>
+    <div id="centros" class="muted">Sem registros.</div>
+  </div>
+
+  <div class="section-full">
+    <div class="section-title"><h2>Lançamentos</h2></div>
+    <form id="formLanc" class="form-row">
+      <label>Descrição <input name="descricao" required></label>
+      <label>Parcela <input name="parcela"></label>
+      <label>Valor <input type="number" step="0.01" name="valorDocumento" required></label>
+      <label>Data Lançamento <input type="date" name="dataLancamento" required></label>
+      <label>Vencimento <input type="date" name="dataVencimento"></label>
+      <label>Baixa <input type="date" name="dataBaixa"></label>
+      <label>Tipo
+        <select name="tipoLancamento">
+          <option>credito</option>
+          <option>debito</option>
+        </select>
+      </label>
+      <label>Situação
+        <select name="situacao">
+          <option>aberto</option>
+          <option>baixado</option>
+        </select>
+      </label>
+      <label>Conta (ID) <input type="number" name="contaId"></label>
+      <label>Pessoa (ID) <input type="number" name="pessoaId"></label>
+      <label>Centro (ID) <input type="number" name="centroCustoId"></label>
+      <div style="align-self:end"><button>Adicionar</button></div>
+    </form>
+    <div id="lancs" class="muted">Sem registros.</div>
+  </div>
+</section>
+
+<script>
+let token = null;
+const show = id => { ['login','dashboard'].forEach(s => document.getElementById(s).classList.add('hidden')); document.getElementById(id).classList.remove('hidden'); };
+const logout = () => { token=null; localStorage.removeItem('token'); show('login'); };
+
+const API = {
+  async get(ep){
+    const r = await fetch(ep,{headers:{Authorization:'Bearer '+token}});
+    if(!r.ok) throw new Error(await r.text());
+    return r.json();
+  },
+  async post(ep, payload){
+    const r = await fetch(ep,{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+token},body:JSON.stringify(payload)});
+    if(!r.ok) throw new Error(await r.text());
+    return r.json();
+  }
+};
+
+// LOGIN
+document.getElementById('formLogin').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const btn = document.getElementById('btnLogin') || e.submitter;
+  if(btn) btn.disabled = true;
+  document.getElementById('msgLogin').textContent = 'Entrando...';
+  const { email, senha } = Object.fromEntries(new FormData(e.target).entries());
+  try{
+    const r = await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,senha})});
+    if(!r.ok) throw new Error(await r.text());
+    const data = await r.json();
+    token = data.token; localStorage.setItem('token', token);
+    document.getElementById('msgLogin').textContent = '';
+    show('dashboard'); refreshAll();
+  }catch(err){
+    document.getElementById('msgLogin').textContent = 'Erro no login: ' + (err.message || 'falha de rede');
+    console.error(err);
+  } finally {
+    if(btn) btn.disabled = false;
+  }
+});
+
+function tbl(rows){
+  if(!rows.length) return '<p class="muted">Sem registros</p>';
+  const keys = Object.keys(rows[0]); let h = '<table><thead><tr>'+keys.map(k=>`<th>${k}</th>`).join('')+'</tr></thead><tbody>';
+  h += rows.map(r=>'<tr>'+keys.map(k=>`<td>${r[k]??''}</td>`).join('')+'</tr>').join('')+'</tbody></table>'; return h;
+}
+
+function moeda(n){ return 'R$ ' + Number(n||0).toFixed(2); }
+
+async function refreshAll(){
+  const [contas, lancs, pessoas, bancos, centros] = await Promise.all([
+    API.get('/api/contas'),
+    API.get('/api/lancamentos'),
+    API.get('/api/pessoas'),
+    API.get('/api/bancos'),
+    API.get('/api/centros')
+  ]);
+
+  // Visão geral
+  const saldo = contas.reduce((a,c)=>a+(Number(c.saldo)||0),0);
+  const cartoes = contas.filter(c=>c.tipoConta==='contaCredito').reduce((a,c)=>a+(Number(c.saldo)||0),0);
+  const depositos = lancs.filter(l=>l.tipoLancamento==='credito').reduce((a,l)=>a+(Number(l.valorDocumento)||0),0);
+  const saques = lancs.filter(l=>l.tipoLancamento==='debito').reduce((a,l)=>a+(Number(l.valorDocumento)||0),0);
+  const contasPagar = lancs.filter(l=>l.tipoLancamento==='debito' && l.situacao==='aberto').reduce((a,l)=>a+(Number(l.valorDocumento)||0),0);
+
+  document.getElementById('sSaldo').textContent = moeda(saldo);
+  document.getElementById('sCartoes').textContent = moeda(cartoes);
+  document.getElementById('sDepositos').textContent = moeda(depositos);
+  document.getElementById('sSaques').textContent = moeda(saoques = saques);
+  document.getElementById('sContasPagar').textContent = moeda(contasPagar);
+
+  // Extrato (ordenado por data + id, já vem ordenado do backend – reforçamos no client)
+  const ordered = [...lancs].sort((a,b)=>{
+    const da = new Date(a.dataLancamento||'1970-01-01'), db = new Date(b.dataLancamento||'1970-01-01');
+    return db-da || (b.id - a.id);
+  });
+  let extratoHtml = '<table><thead><tr><th>Data</th><th>Descrição</th><th>Conta</th><th>Tipo</th><th>Valor</th><th>Situação</th></tr></thead><tbody>';
+  extratoHtml += ordered.map(l=>`
+    <tr>
+      <td>${l.dataLancamento||''}</td>
+      <td>${l.descricao||''}</td>
+      <td>${l.contaDescricao||''}</td>
+      <td><span class="badge">${l.tipoLancamento||''}</span></td>
+      <td>${moeda(l.valorDocumento)}</td>
+      <td>${l.situacao||''}</td>
+    </tr>
+  `).join('');
+  extratoHtml += '</tbody></table>';
+  document.getElementById('extrato').innerHTML = extratoHtml;
+
+  // Tabelas das seções (largura inteira)
+  document.getElementById('pessoas').innerHTML = tbl(pessoas);
+  document.getElementById('bancos').innerHTML  = tbl(bancos);
+  document.getElementById('contas').innerHTML  = tbl(contas);
+  document.getElementById('centros').innerHTML = tbl(centros);
+  document.getElementById('lancs').innerHTML   = tbl(lancs);
+}
+
+// binds de criação
+function bind(formId, endpoint, numerics=[]){
+  document.getElementById(formId).addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const payload = Object.fromEntries(new FormData(e.target).entries());
+    numerics.forEach(k=>{ if(payload[k]!==undefined && payload[k]!=='' ) payload[k]=Number(payload[k]); });
+    try{
+      await API.post(endpoint, payload);
+      e.target.reset();
+      refreshAll();
+    }catch(err){ alert(err.message); }
+  });
+}
+bind('formPessoa','/api/pessoas');
+bind('formBanco','/api/bancos');
+bind('formConta','/api/contas',['limite','saldo','bancoId']);
+bind('formCentro','/api/centros');
+bind('formLanc','/api/lancamentos',['valorDocumento','contaId','pessoaId','centroCustoId']);
+
+// auto login se já houver token salvo
+if(localStorage.getItem('token')){ token = localStorage.getItem('token'); show('dashboard'); refreshAll(); }
+</script>
+</body>
+</html>
